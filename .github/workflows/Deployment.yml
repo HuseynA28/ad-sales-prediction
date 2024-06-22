@@ -46,21 +46,21 @@ jobs:
         curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc > /dev/null
         echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
         sudo apt update && sudo apt install ngrok
-
-    - name: Start Ngrok
-      run: |
-        ngrok authtoken ${{ secrets.ngrok}}
-        ngrok http 8000 &
-        sleep 10  # Wait for ngrok to initialize
-        NGROK_URL=$(curl --silent http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-        echo "NGROK_URL=${NGROK_URL}" >> $GITHUB_ENV
-
-    - name: Deploy FastAPI application
-      run: |
-        uvicorn scripts.main:app --host 0.0.0.0 --port 8000 &
-        sleep 10  # Allow server to start
-        echo "FastAPI app running at ${{ env.NGROK_URL }}"
-
+        - name: Start Ngrok
+        run: |
+          ngrok authtoken ${{ secrets.ngrok }}
+          ngrok http 8000 --log=stdout &
+          sleep 10  # Wait for ngrok to initialize
+          NGROK_URL=$(curl --silent http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+          echo "NGROK_URL=${NGROK_URL}" >> $GITHUB_ENV
+          echo "Ngrok started, URL: ${{ env.NGROK_URL }}"
+      
+        - name: Deploy FastAPI application
+        run: |
+          uvicorn scripts.main:app --host 0.0.0.0 --port 8000 --log-level debug &
+          sleep 10  # Allow server to start
+          echo "FastAPI app running at ${{ env.NGROK_URL }}"
+      
     - name: Debug Running Services
       run: |
         echo "Running processes:"
