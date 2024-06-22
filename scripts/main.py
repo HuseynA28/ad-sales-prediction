@@ -1,43 +1,24 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 import joblib
-import numpy as np
-
 import os
-import joblib
-
-# Print the current working directory to verify the path
-print("Current working directory:", os.getcwd())
-
-# Use an absolute path for debugging purposes to ensure the model can be loaded correctly
-import os
-import joblib
-
-# Full, correct path to the model
-model_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'models', 'sales_model.pkl')
-print("Full path to model:", model_path)
-
-model = joblib.load(model_path)
-
-
-# Load your trained model
-model = joblib.load(model_path)
-
 
 app = FastAPI()
 
-# Define a Pydantic model for the input data
-class Advertising(BaseModel):
-    TV: float
-    Radio: float
-    Newspaper: float
-
-@app.post("/predict/")
-async def predict(request: Advertising):
-    data = np.array([[request.TV, request.Radio, request.Newspaper]])
-    prediction = model.predict(data)
-    return {"prediction": prediction.tolist()}
-
 @app.get("/")
-async def read_root():
+def read_root():
     return {"Hello": "World"}
+
+@app.get("/predict/")
+def predict(tv: float, radio: float, newspaper: float):
+    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../models/sales_model.pkl'))
+    
+    if not os.path.exists(model_path):
+        raise HTTPException(status_code=404, detail="Model file not found")
+    
+    model = joblib.load(model_path)
+    prediction = model.predict([[tv, radio, newspaper]])
+    return {"prediction": prediction[0]}
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

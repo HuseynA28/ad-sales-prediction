@@ -33,6 +33,6 @@ jobs:
         PYTHONPATH: ${{ github.workspace }}
 
     - name: Deploy FastAPI application
-      run: uvicorn main:app --host 0.0.0.0 --port ${{ secrets.PORT || '8000' }}
+      run: uvicorn scripts.main:app --host 0.0.0.0 --port ${{ secrets.PORT || '8000' }}
       env:
         PYTHONPATH: ${{ github.workspace }}
