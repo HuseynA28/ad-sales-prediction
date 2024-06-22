@@ -60,8 +60,6 @@ jobs:
         NGROK_URL=$(cat ngrok_tunnels.json | jq -r '.tunnels[0].public_url')
         echo "NGROK_URL=${NGROK_URL}" >> $GITHUB_ENV
 
-    - name: Print Ngrok URL
-      run: echo "Ngrok URL: ${{ env.NGROK_URL }}"
 
     - name: Deploy FastAPI application
       run: uvicorn scripts.main:app --host 0.0.0.0 --port 8000
