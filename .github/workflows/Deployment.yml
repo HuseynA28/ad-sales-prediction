@@ -41,19 +41,38 @@ jobs:
         echo "Public IPv4: ${{ steps.ip.outputs.ipv4 }}"
         echo "Public IPv6: ${{ steps.ip.outputs.ipv6 }}"
 
-    - name: Install ngrok
+    - name: Install Ngrok
       run: |
-        curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+        curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc > /dev/null
         echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-        sudo apt-get update
-        sudo apt-get install ngrok
+        sudo apt update && sudo apt install ngrok
 
-    - name: Start uvicorn with ngrok
+    - name: Start Ngrok
       run: |
-        ngrok http 8000 & # Start ngrok in the background
-        sleep 5 # Wait for ngrok to initialize
-        uvicorn scripts.main:app --host 0.0.0.0 --port 8000 &
-        sleep 10 # Wait for uvicorn to start
-        curl --silent http://localhost:4040/api/tunnels # Get ngrok tunnel info
+        nohup ngrok http 8000 &
+        sleep 10  # Wait for ngrok to initialize
+        curl --silent http://localhost:4040/api/tunnels > ngrok_tunnels.json
+        cat ngrok_tunnels.json
+
+    - name: Extract Ngrok URL
+      id: extract-ngrok-url
+      run: |
+        NGROK_URL=$(cat ngrok_tunnels.json | jq -r '.tunnels[0].public_url')
+        echo "NGROK_URL=${NGROK_URL}" >> $GITHUB_ENV
+
+    - name: Print Ngrok URL
+      run: echo "Ngrok URL: ${{ env.NGROK_URL }}"
+
+    - name: Deploy FastAPI application
+      run: uvicorn scripts.main:app --host 0.0.0.0 --port 8000
       env:
         PYTHONPATH: ${{ github.workspace }}
+    
+    - name: Debug Running Services
+      run: |
+        echo "Running processes:"
+        ps aux
+        echo "Docker containers:"
+        docker ps
+        echo "Listening ports:"
+        sudo netstat -tulpn
