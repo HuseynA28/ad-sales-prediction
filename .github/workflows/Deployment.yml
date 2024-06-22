@@ -32,7 +32,11 @@ jobs:
       env:
         PYTHONPATH: ${{ github.workspace }}
 
+    - name: Get IP address
+      id: get_ip
+      run: echo "IP=$(hostname -I | awk '{print $1}')" >> $GITHUB_ENV
+
     - name: Deploy FastAPI application
-      run: uvicorn scripts.main:app --host 0.0.0.0 --port ${{ secrets.PORT || '8000' }}
+      run: uvicorn scripts.main:app --host ${{ env.IP }} --port ${{ secrets.PORT || '8000' }}
       env:
         PYTHONPATH: ${{ github.workspace }}
