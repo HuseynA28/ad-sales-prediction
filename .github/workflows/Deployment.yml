@@ -16,26 +16,19 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      - name: Print Checkout
-        run: echo "Checked out code."
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
-      - name: Print Python Setup
-        run: echo "Set up Python 3.10."
+        python-version: '3.10' 
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        echo "Installed dependencies."
 
     - name: Train model
-      run: |
-        python scripts/train_model.py
-        echo "Trained model."
+      run: python scripts/train_model.py
       env:
         PYTHONPATH: ${{ github.workspace }}
 
@@ -47,43 +40,30 @@ jobs:
       run: |
         echo "Public IPv4: ${{ steps.ip.outputs.ipv4 }}"
         echo "Public IPv6: ${{ steps.ip.outputs.ipv6 }}"
-        echo "Printed public IPs."
 
     - name: Install Ngrok
       run: |
         curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc > /dev/null
-        echo "Added Ngrok GPG key."
         echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-        echo "Added Ngrok to APT sources."
         sudo apt update && sudo apt install ngrok
-        echo "Installed Ngrok."
 
     - name: Allow port 8000 through UFW
       run: |
         sudo ufw allow 8000/tcp
-        echo "Allowed port 8000 through UFW."
         sudo ufw enable
-        echo "Enabled UFW."
-        sudo ufw status verbose
-        echo "UFW Status:"
-        sudo ufw status verbose
+        sudo ufw status
 
     - name: Start Ngrok
       run: |
-        ngrok authtoken ${{ secrets.ngrok_authontoek }}
-        echo "Authenticated Ngrok."
+        ngrok authtoken ${{ secrets.ngrok}}
         ngrok http 8000 &
-        echo "Started Ngrok."
         sleep 10  # Wait for ngrok to initialize
         NGROK_URL=$(curl --silent http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-        echo "Retrieved Ngrok URL."
         echo "NGROK_URL=${NGROK_URL}" >> $GITHUB_ENV
-        echo "Set NGROK_URL environment variable."
 
     - name: Deploy FastAPI application
       run: |
         uvicorn scripts.main:app --host 0.0.0.0 --port 8000 &
-        echo "Started FastAPI application."
         sleep 10  # Allow server to start
         echo "FastAPI app running at ${{ env.NGROK_URL }}"
 
@@ -91,10 +71,7 @@ jobs:
       run: |
         echo "Running processes:"
         ps aux
-        echo "Listed running processes."
         echo "Docker containers:"
         docker ps
-        echo "Listed Docker containers."
         echo "Listening ports:"
         sudo netstat -tulpn
-        echo "Listed listening ports."
