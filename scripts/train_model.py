@@ -5,8 +5,10 @@ from sklearn.metrics import mean_squared_error
 import joblib
 
 def train_model():
-    # Load data
-    data = pd.read_csv('../data/advertising.csv')
+    import os
+
+#
+    data = os.path.abspath(os.path.join(os.path.dirname(__file__), '../data/advertising.csv'))
     X = data[['TV', 'Radio', 'Newspaper']]
     y = data['Sales']
 
