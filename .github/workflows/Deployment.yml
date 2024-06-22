@@ -16,13 +16,15 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      run: echo "Checked out code."
+      - name: Print Checkout
+        run: echo "Checked out code."
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-      run: echo "Set up Python 3.10."
+      - name: Print Python Setup
+        run: echo "Set up Python 3.10."
 
     - name: Install dependencies
       run: |
@@ -62,15 +64,13 @@ jobs:
         echo "Allowed port 8000 through UFW."
         sudo ufw enable
         echo "Enabled UFW."
-        sudo ufw status
-        echo "Checked UFW status."
         sudo ufw status verbose
         echo "UFW Status:"
         sudo ufw status verbose
 
     - name: Start Ngrok
       run: |
-        ngrok authtoken ${{ secrets.ngrok}}
+        ngrok authtoken ${{ secrets.ngrok_authontoek }}
         echo "Authenticated Ngrok."
         ngrok http 8000 &
         echo "Started Ngrok."
