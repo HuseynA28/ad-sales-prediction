@@ -20,7 +20,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8' 
+        python-version: '3.10' 
 
     - name: Install dependencies
       run: |
@@ -42,6 +42,6 @@ jobs:
         echo "Public IPv6: ${{ steps.ip.outputs.ipv6 }}"
 
     - name: Deploy FastAPI application
-      run: uvicorn scripts.main:app --host ${{ steps.ip.outputs.ipv4 }} --port ${{ secrets.PORT || '8000' }}
+      run: uvicorn scripts.main:app --host 0.0.0.0 --port ${{ secrets.PORT || '8000' }}
       env:
         PYTHONPATH: ${{ github.workspace }}
